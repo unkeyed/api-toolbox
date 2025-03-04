@@ -1,16 +1,15 @@
-import { createCache, Namespace, type Cache as C} from "@unkey/cache";
+import { createCache, Namespace, type Cache as C } from "@unkey/cache";
 import { MemoryStore } from "@unkey/cache/stores";
 
-import type {  Middleware } from "./hono";
+import type { Middleware } from "./hono";
 
 type Post = { id: number; title: string; post: string };
 
 export type CacheNamespaces = {
-  post: Post
-}
+  post: Post;
+};
 
-export type Cache = C<CacheNamespaces>
-
+export type Cache = C<CacheNamespaces>;
 
 const persistentMap = new Map();
 
@@ -29,4 +28,3 @@ export function initCache(): Middleware {
     return next();
   };
 }
-

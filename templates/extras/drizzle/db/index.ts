@@ -1,1 +1,1 @@
-export * as schema from "./turso"
+export * as schema from "./turso";

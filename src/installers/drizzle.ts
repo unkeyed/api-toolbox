@@ -22,6 +22,14 @@ export const drizzleInstaller: Installer = ({
     dependencies: devPackages,
     devMode: true,
   });
+  if (databaseProvider === "postgres") {
+    addPackageDependency({
+      projectDir,
+      dependencies: ["@types/pg"],
+      devMode: true,
+    });
+  }
+
   addPackageDependency({
     projectDir,
     devMode: true,
@@ -35,6 +43,7 @@ export const drizzleInstaller: Installer = ({
         {
           turso: "@libsql/client",
           sqlite: "@libsql/client",
+          postgres: "pg",
         } as const
       )[databaseProvider],
     ],
@@ -64,17 +73,33 @@ export const drizzleInstaller: Installer = ({
   const configName =
     databaseProvider === "turso"
       ? "drizzle-turso-config.ts"
-      : "drizzle-config.ts";
+      : databaseProvider === "postgres"
+        ? "drizzle-postgres-config.ts"
+        : "drizzle-config.ts";
   const configFile = path.join(extrasDir, `/drizzle/config/${configName}`);
   const configDest = path.join(projectDir, "apps/api/drizzle.config.ts");
-  const schemaName = databaseProvider === "turso" ? "turso.ts" : `base.ts`;
+  const schemaName =
+    databaseProvider === "turso"
+      ? "turso.ts"
+      : databaseProvider === "postgres"
+        ? "postgres.ts"
+        : "base.ts";
   const schemaSrc = path.join(extrasDir, "drizzle/db/", schemaName);
   const schemaDest = path.join(projectDir, `apps/api/src/db/${schemaName}`);
-  const indexSrc = path.join(extrasDir, "drizzle/db/index.ts");
+  const indexSrc =
+    databaseProvider === "postgres"
+      ? path.join(extrasDir, `drizzle/db/index-postgres.ts`)
+      : path.join(projectDir, `drizzle/db/index.ts`);
   const indexDest = path.join(projectDir, `apps/api/src/db/index.ts`);
-  const databaseSrc = path.join(extrasDir, "drizzle/database.ts");
+  const databaseSrc =
+    databaseProvider === "postgres"
+      ? path.join(extrasDir, "drizzle/database-postgres.ts")
+      : path.join(extrasDir, "drizzle/database.ts");
   const databaseDest = path.join(projectDir, "apps/api/src/database.ts");
-  const clientSrc = path.join(extrasDir, "drizzle/hono/posts.ts");
+  const clientSrc =
+    databaseProvider === "postgres"
+      ? path.join(extrasDir, "drizzle/hono/posts-postgres.ts")
+      : path.join(extrasDir, "drizzle/hono/posts.ts");
   const destination = path.join(projectDir, "apps/api/src/routes/posts.ts");
 
   // add db:* scripts to package.json
@@ -102,10 +127,21 @@ export const drizzleInstaller: Installer = ({
   });
 
   const envPath = path.join(projectDir, "apps/api/.dev.vars");
-  if (databaseProvider === "turso") {
-    fs.appendFileSync(envPath, `TURSO_DATABASE_URL="YOUR_DATABASE_URL_HERE"\n`);
-    fs.appendFileSync(envPath, `TURSO_AUTH_TOKEN="YOUR_AUTH_TOKEN"\n`);
-  } else {
-    fs.appendFileSync(envPath, `DATABASE_URL="file:./dev.db"`);
+  switch (databaseProvider) {
+    case "turso":
+      fs.appendFileSync(
+        envPath,
+        `TURSO_DATABASE_URL="YOUR_DATABASE_URL_HERE"\n`
+      );
+      fs.appendFileSync(envPath, `TURSO_AUTH_TOKEN="YOUR_AUTH_TOKEN"\n`);
+      break;
+    case "postgres":
+      fs.appendFileSync(
+        envPath,
+        `DATABASE_URL="postgresql://user:password@localhost:5432/dbname"\n`
+      );
+      break;
+    default:
+      fs.appendFileSync(envPath, `DATABASE_URL="file:./dev.db"`);
   }
 };

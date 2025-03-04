@@ -6,7 +6,7 @@ import { fumaInstaller } from "./fumadocs.js";
 export const availablePackages = ["prisma", "drizzle", "docs"] as const;
 export type AvailablePackages = (typeof availablePackages)[number];
 
-export const databaseProviders = ["sqlite", "turso"] as const;
+export const databaseProviders = ["sqlite", "turso", "postgres"] as const;
 export type DatabaseProvider = (typeof databaseProviders)[number];
 
 export interface InstallerOptions {

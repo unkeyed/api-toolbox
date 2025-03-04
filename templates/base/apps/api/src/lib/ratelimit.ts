@@ -1,4 +1,5 @@
 import { Ratelimit } from "@unkey/ratelimit";
+
 import type { Middleware } from "./hono";
 
 export function initRatelimiter(): Middleware {

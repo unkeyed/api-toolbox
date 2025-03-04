@@ -88,7 +88,11 @@ export const runCli = async (): Promise<CliResults> => {
           if (results.database === "none") return;
           return p.select({
             message: "What database provider would you like to use?",
-            options: [{ value: "turso", label: "Turso" }],
+            options: [
+              { value: "sqlite", label: "SQLite" },
+              { value: "turso", label: "Turso" },
+              { value: "postgres", label: "PostgreSQL" },
+            ],
             initialValue: "sqlite",
           });
         },

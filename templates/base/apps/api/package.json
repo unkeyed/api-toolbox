@@ -7,15 +7,15 @@
   },
   "dependencies": {
     "@hono/zod-openapi": "^0.14.5",
-    "@unkey/api": "^0.20.7",
-    "@unkey/cache": "^1.0.2",
-    "@unkey/hono": "^1.2.0",
-    "@unkey/ratelimit": "^0.1.12",
-    "hono": "^4.4.7",
-    "zod": "^3.23.8"
+    "@unkey/api": "^0.34.0",
+    "@unkey/cache": "^1.5.0",
+    "@unkey/hono": "^1.4.15",
+    "@unkey/ratelimit": "^0.5.5",
+    "hono": "^4.7.2",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240529.0",
-    "wrangler": "^3.57.2"
+    "@cloudflare/workers-types": "^4.20250303.0",
+    "wrangler": "^3.112.0"
   }
 }

@@ -62,8 +62,15 @@ export const prismaInstaller: Installer = ({
   const schemaSrc = path.join(
     extrasDir,
     "prisma/schema",
-    `${"base"}${databaseProvider === "turso" ? "-turso" : ""}.prisma`
+    `${"base"}${
+      databaseProvider === "turso"
+        ? "-turso"
+        : databaseProvider === "postgres"
+          ? "-postgres"
+          : ""
+    }.prisma`
   );
+
   let schemaText = fs.readFileSync(schemaSrc, "utf-8");
   if (databaseProvider !== "sqlite") {
     schemaText = schemaText.replace(
@@ -71,7 +78,8 @@ export const prismaInstaller: Installer = ({
       `provider = "${
         {
           turso: "sqlite",
-        }[databaseProvider]
+          postgres: "postgresql",
+        }[databaseProvider] ?? "sqlite"
       }"`
     );
   }
@@ -79,13 +87,19 @@ export const prismaInstaller: Installer = ({
   fs.mkdirSync(path.dirname(schemaDest), { recursive: true });
   fs.writeFileSync(schemaDest, schemaText);
 
-  const clientSrc = path.join(extrasDir, "prisma/hono/posts.ts");
+  const clientSrc =
+    databaseProvider === "postgres"
+      ? path.join(extrasDir, "prisma/hono/posts-postgres.ts")
+      : path.join(extrasDir, "prisma/hono/posts.ts");
   const destination = path.join(projectDir, "apps/api/src/routes/posts.ts");
   fs.copyFileSync(clientSrc, destination);
   // add postinstall and push script to package.json
   const packageJsonPath = path.join(projectDir, "apps/api/package.json");
 
-  const databaseSrc = path.join(extrasDir, "prisma/database.ts");
+  const databaseSrc =
+    databaseProvider === "postgres"
+      ? path.join(extrasDir, "prisma/database-postgres.ts")
+      : path.join(extrasDir, "prisma/database.ts");
   const databaseDest = path.join(projectDir, "apps/api/src/database.ts");
   fs.copyFileSync(databaseSrc, databaseDest);
   const packageJsonContent = fs.readJSONSync(packageJsonPath) as PackageJson;
@@ -103,15 +117,28 @@ export const prismaInstaller: Installer = ({
     spaces: 2,
   });
 
-  const migrations = path.join(projectDir, "apps/api/prisma/migrations");
-  fs.mkdirSync(migrations, { recursive: true });
-  const migrationSrc = path.join(extrasDir, "prisma/migrations");
-  fs.copySync(migrationSrc, migrations);
+  if (databaseProvider !== "postgres") {
+    const migrations = path.join(projectDir, "apps/api/prisma/migrations");
+    fs.mkdirSync(migrations, { recursive: true });
+    const migrationSrc = path.join(extrasDir, "prisma/migrations");
+    fs.copySync(migrationSrc, migrations);
+  }
   const envPath = path.join(projectDir, "apps/api/.dev.vars");
-  if (databaseProvider === "turso") {
-    fs.appendFileSync(envPath, `TURSO_DATABASE_URL="YOUR_DATABASE_URL_HERE"\n`);
-    fs.appendFileSync(envPath, `TURSO_AUTH_TOKEN="YOUR_AUTH_TOKEN"\n`);
-  } else {
-    fs.appendFileSync(envPath, `DATABASE_URL="file:./dev.db"`);
+  switch (databaseProvider) {
+    case "turso":
+      fs.appendFileSync(
+        envPath,
+        `TURSO_DATABASE_URL="YOUR_DATABASE_URL_HERE"\n`
+      );
+      fs.appendFileSync(envPath, `TURSO_AUTH_TOKEN="YOUR_AUTH_TOKEN"\n`);
+      break;
+    case "postgres":
+      fs.appendFileSync(
+        envPath,
+        `DATABASE_URL="postgresql://user:password@localhost:5432/dbname"\n`
+      );
+      break;
+    default:
+      fs.appendFileSync(envPath, `DATABASE_URL="file:./dev.db"`);
   }
 };

@@ -12,7 +12,7 @@ export type HonoEnv = {
     UNKEY_API_ID: string;
   };
   Variables: {
-    cache: Cache
+    cache: Cache;
     unkey: UnkeyContext;
     ratelimit: Ratelimit;
   };
